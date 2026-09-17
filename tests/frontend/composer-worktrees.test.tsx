@@ -125,6 +125,21 @@ describe('composer worktree picker', () => {
     expect(onExecuteCheckout).toHaveBeenCalledWith({ strategy: 'branch', operation: 'switch', branch: 'feature/local' })
   })
 
+  it('opens a custom reasoning picker instead of a native select', () => {
+    const onEffortChange = vi.fn()
+    act(() => root.render(<Composer {...props({ reasoningLevels: ['low', 'medium', 'high'], onEffortChange })} />))
+
+    expect(container.querySelector('select')).toBeNull()
+    const trigger = container.querySelector<HTMLButtonElement>('[aria-label="Reasoning effort"]')
+    expect(trigger?.getAttribute('role')).toBe('combobox')
+    act(() => trigger?.click())
+
+    const high = [...container.querySelectorAll<HTMLButtonElement>('[role="option"]')].find((option) => option.textContent === 'High')
+    act(() => high?.click())
+    expect(onEffortChange).toHaveBeenCalledWith('high')
+    expect(container.querySelector('[role="listbox"]')).toBeNull()
+  })
+
   it('restores an unsent draft and model after the composer remounts', async () => {
     act(() => root.render(<Composer {...props({ draftKey: 'project:new', model: 'openai:chosen' })} />))
     const textarea = container.querySelector('textarea')!

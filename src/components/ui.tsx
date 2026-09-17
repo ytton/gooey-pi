@@ -1,5 +1,5 @@
-import { ChevronDown, X } from 'lucide-react'
-import { useEffect, useId, useRef, type ButtonHTMLAttributes, type ReactNode, type RefObject, type SelectHTMLAttributes } from 'react'
+import { Check, ChevronDown, X } from 'lucide-react'
+import { useEffect, useId, useRef, useState, type ButtonHTMLAttributes, type ReactNode, type RefObject } from 'react'
 import { createPortal } from 'react-dom'
 
 interface IconButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
@@ -36,20 +36,84 @@ export function BrowserGlobe({ size = 18 }: { size?: number }) {
   )
 }
 
-interface SelectControlProps extends SelectHTMLAttributes<HTMLSelectElement> {
+interface SelectControlProps<T extends string> {
   icon?: ReactNode
   compact?: boolean
+  className?: string
   label: string
+  value: T
+  options: Array<{ value: T; label: string }>
+  onChange(value: T): void
+  disabled?: boolean
 }
 
-export function SelectControl({ icon, compact, className = '', label, children, ...props }: SelectControlProps) {
+export function SelectControl<T extends string>({ icon, compact, className = '', label, value, options, onChange, disabled }: SelectControlProps<T>) {
+  const [open, setOpen] = useState(false)
+  const rootRef = useRef<HTMLDivElement>(null)
+  const listId = useId()
+  const selected = options.find((option) => option.value === value) ?? options[0]
+
+  useEffect(() => {
+    if (!open) return
+    const close = (event: MouseEvent) => {
+      if (!(event.target instanceof Node) || !rootRef.current?.contains(event.target)) setOpen(false)
+    }
+    const onEscape = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') setOpen(false)
+    }
+    document.addEventListener('mousedown', close)
+    document.addEventListener('keydown', onEscape)
+    return () => {
+      document.removeEventListener('mousedown', close)
+      document.removeEventListener('keydown', onEscape)
+    }
+  }, [open])
+
   return (
-    <label className={`select-control ${compact ? 'select-control--compact' : ''} ${className}`} title={label}>
-      <span className="select-control__icon" aria-hidden="true">{icon}</span>
-      <span className="sr-only">{label}</span>
-      <select aria-label={label} {...props}>{children}</select>
-      <ChevronDown className="select-control__chevron" size={12} aria-hidden="true" />
-    </label>
+    <div ref={rootRef} className={`select-control ${compact ? 'select-control--compact' : ''} ${className}`}>
+      <button
+        type="button"
+        className="select-control__trigger"
+        role="combobox"
+        aria-label={label}
+        title={label}
+        aria-haspopup="listbox"
+        aria-expanded={open}
+        aria-controls={open ? listId : undefined}
+        disabled={disabled}
+        onClick={() => setOpen((current) => !current)}
+        onKeyDown={(event) => {
+          if (!open && (event.key === 'ArrowDown' || event.key === 'ArrowUp')) {
+            event.preventDefault()
+            setOpen(true)
+          }
+        }}
+      >
+        <span className="select-control__icon" aria-hidden="true">{icon}</span>
+        <span className="select-control__label">{selected?.label ?? ''}</span>
+        <ChevronDown className="select-control__chevron" size={12} aria-hidden="true" />
+      </button>
+      {open ? (
+        <div className="select-control__menu" id={listId} role="listbox" aria-label={label}>
+          {options.map((option) => {
+            const isSelected = option.value === value
+            return (
+              <button
+                type="button"
+                role="option"
+                aria-selected={isSelected}
+                className={`select-control__option${isSelected ? ' is-selected' : ''}`}
+                key={option.value}
+                onClick={() => { onChange(option.value); setOpen(false) }}
+              >
+                <span className="select-control__check">{isSelected ? <Check size={13} /> : null}</span>
+                <span>{option.label}</span>
+              </button>
+            )
+          })}
+        </div>
+      ) : null}
+    </div>
   )
 }
 

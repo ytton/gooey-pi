@@ -709,13 +709,14 @@ export const Composer = memo(function Composer({
             />
             <ModelPicker value={model} modelsByProvider={modelsByProvider} providers={providers} onChange={onModelChange} />
             <ExecutingModelChip executingModel={executingModel} />
-            <SelectControl label="Reasoning effort" compact icon={<Gauge size={12} />} value={effort} onChange={(event) => onEffortChange(event.target.value as PrimeThinkingLevel)}>
-              {reasoningLevels.map((level) => (
-                <option key={level} value={level}>
-                  {reasoningLabels[level]}
-                </option>
-              ))}
-            </SelectControl>
+            <SelectControl
+              label="Reasoning effort"
+              compact
+              icon={<Gauge size={12} />}
+              value={effort}
+              options={reasoningLevels.map((level) => ({ value: level, label: reasoningLabels[level] }))}
+              onChange={onEffortChange}
+            />
             {fastSupported ? (
               <button
                 type="button"

@@ -5,28 +5,14 @@ import {
   PanelRight,
   Terminal,
 } from 'lucide-react'
-import type { ApplicationMenuName, ProjectRecord, WorkspaceView } from '@/types/api'
+import type { ProjectRecord, WorkspaceView } from '@/types/api'
 import { useI18n, type MessageKey } from '@/lib/i18n'
 import { shortcutLabel } from '@/lib/platform-shortcuts'
 import { BrowserGlobe, IconButton } from './ui'
 import { ProjectRunControl, type ProjectScriptKind } from './ProjectRunControl'
-import type { MouseEvent } from 'react'
 
 const viewTitles: Record<Exclude<WorkspaceView, 'session'>, MessageKey> = {
   projects: 'nav.projects', activity: 'nav.activity', scheduled: 'nav.scheduled', plugins: 'nav.capabilities', settings: 'nav.settings',
-}
-
-const windowsMenus: ReadonlyArray<{ name: ApplicationMenuName; label: string }> = [
-  { name: 'file', label: 'File' },
-  { name: 'edit', label: 'Edit' },
-  { name: 'view', label: 'View' },
-  { name: 'window', label: 'Window' },
-  { name: 'help', label: 'Help' },
-]
-
-function openApplicationMenu(menu: ApplicationMenuName, event: MouseEvent<HTMLButtonElement>): void {
-  const rect = event.currentTarget.getBoundingClientRect()
-  void window.prime?.app.popupMenu?.(menu, rect.left, rect.bottom).catch(() => undefined)
 }
 
 interface TitleToolbarProps {
@@ -59,11 +45,9 @@ export function TitleToolbar({ project, gitBranch, view, productName = 'Prime Wo
   return (
     <header className="title-toolbar drag-region">
       {!sidebarOpen && platform === 'darwin' ? <div className="traffic-light-clearance traffic-light-clearance--toolbar" aria-hidden="true" /> : null}
-      {platform === 'win32' ? <nav className="windows-app-menu" aria-label="Application menu">
-        {windowsMenus.map(({ name, label }) => <button key={name} type="button" className="windows-app-menu__button" onClick={(event) => openApplicationMenu(name, event)}>{label}</button>)}
-      </nav> : null}
+      {platform === 'win32' ? <div className="windows-app-menu" aria-hidden="true" /> : null}
       <div className="title-toolbar__nav no-drag">
-        {!sidebarOpen ? <IconButton label={`Show sidebar (${sidebarShortcut})`} onClick={onToggleSidebar}><PanelLeft size={16} /></IconButton> : null}
+        {!sidebarOpen ? <IconButton label={t('sidebar.show', { shortcut: sidebarShortcut })} onClick={onToggleSidebar}><PanelLeft size={16} /></IconButton> : null}
       </div>
       <div className="title-toolbar__identity">
         <strong>{project?.name ?? (view === 'session' ? productName : t(viewTitles[view]))}</strong>
@@ -73,11 +57,11 @@ export function TitleToolbar({ project, gitBranch, view, productName = 'Prime Wo
         {view === 'session' && project && onRunProjectScript && onStopProjectScript && onSaveProjectScripts
           ? <ProjectRunControl project={project} activeKind={activeProjectScriptKind} onRun={onRunProjectScript} onStop={onStopProjectScript} onSave={onSaveProjectScripts} />
           : null}
-        {view === 'session' && onToggleVoice ? <IconButton className={voiceOpen ? 'is-active voice-toggle--active' : ''} label={voiceOpen ? 'Close realtime voice' : 'Open realtime voice'} onClick={onToggleVoice}><AudioWaveform size={17} /></IconButton> : null}
-        {view === 'session' ? <IconButton className={terminalOpen ? 'is-active' : ''} label={`Toggle terminal (${terminalShortcut})`} onClick={onToggleTerminal}><Terminal size={17} /></IconButton> : null}
-        {view === 'session' ? <IconButton label={`Open browser (${browserShortcut})`} onClick={onOpenBrowser}><BrowserGlobe size={18} /></IconButton> : null}
-        {view === 'session' ? <IconButton className={inspectorOpen ? 'is-active' : ''} label="Toggle inspector" onClick={onToggleInspector}><PanelRight size={16} /></IconButton> : null}
-        {view !== 'session' && sidebarOpen ? <IconButton label={`Hide sidebar (${sidebarShortcut})`} onClick={onToggleSidebar}><PanelLeft size={16} /></IconButton> : null}
+        {view === 'session' && onToggleVoice ? <IconButton className={voiceOpen ? 'is-active voice-toggle--active' : ''} label={voiceOpen ? t('toolbar.closeVoice') : t('toolbar.openVoice')} onClick={onToggleVoice}><AudioWaveform size={17} /></IconButton> : null}
+        {view === 'session' ? <IconButton className={terminalOpen ? 'is-active' : ''} label={t('toolbar.toggleTerminal', { shortcut: terminalShortcut })} onClick={onToggleTerminal}><Terminal size={17} /></IconButton> : null}
+        {view === 'session' ? <IconButton label={t('toolbar.openBrowser', { shortcut: browserShortcut })} onClick={onOpenBrowser}><BrowserGlobe size={18} /></IconButton> : null}
+        {view === 'session' ? <IconButton className={inspectorOpen ? 'is-active' : ''} label={t('toolbar.toggleInspector')} onClick={onToggleInspector}><PanelRight size={16} /></IconButton> : null}
+        {view !== 'session' && sidebarOpen ? <IconButton label={t('sidebar.hide', { shortcut: sidebarShortcut })} onClick={onToggleSidebar}><PanelLeft size={16} /></IconButton> : null}
       </div>
     </header>
   )

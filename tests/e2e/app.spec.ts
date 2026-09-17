@@ -715,12 +715,12 @@ test.describe('Prime Work desktop smoke', () => {
     const reasoning = page.locator('.select-control').filter({ has: page.getByRole('combobox', { name: 'Reasoning effort' }) })
     await expect(modelTrigger.locator('span')).toHaveCSS('display', 'block')
     await expect(reasoning.locator('.select-control__chevron')).toHaveCSS('display', 'none')
-    await expect(reasoning.getByRole('combobox')).toHaveCSS('opacity', '1')
+    await expect(reasoning.locator('.select-control__label')).toHaveCSS('display', 'block')
 
     await page.locator('.conversation-column').evaluate((node) => { node.style.flex = '0 0 300px' })
     await expect(modelTrigger.locator('span')).toHaveCSS('display', 'none')
     await expect(modelTrigger.locator('svg').first()).not.toHaveCSS('display', 'none')
-    await expect(reasoning.getByRole('combobox')).toHaveCSS('opacity', '0')
+    await expect(reasoning.locator('.select-control__label')).toHaveCSS('display', 'none')
     await expect(reasoning.locator('.select-control__icon')).not.toHaveCSS('display', 'none')
 
     const controlBounds = await page.locator('.composer__footer').evaluate((footer) => {

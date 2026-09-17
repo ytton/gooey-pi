@@ -53,5 +53,10 @@ export function buildApplicationMenuTemplate(options: ApplicationMenuOptions): M
 }
 
 export function installApplicationMenu(options: ApplicationMenuOptions): void {
+  const platform = options.platform ?? process.platform
+  if (platform === 'win32') {
+    Menu.setApplicationMenu(null)
+    return
+  }
   Menu.setApplicationMenu(Menu.buildFromTemplate(buildApplicationMenuTemplate(options)))
 }

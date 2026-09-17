@@ -62,6 +62,15 @@ describe('realtime voice surface', () => {
     expect(labels).toContain('Open browser (Ctrl+Shift+B)')
   })
 
+  it('does not render Windows application-menu buttons', () => {
+    act(() => root.render(<TitleToolbar platform="win32" view="session" sidebarOpen inspectorOpen terminalOpen={false} onToggleSidebar={vi.fn()} onToggleInspector={vi.fn()} onToggleTerminal={vi.fn()} onOpenBrowser={vi.fn()} />))
+    expect(container.querySelector('.windows-app-menu')).not.toBeNull()
+    expect(container.querySelector('.windows-app-menu')?.getAttribute('aria-hidden')).toBe('true')
+    expect(container.textContent).not.toContain('File')
+    expect(container.textContent).not.toContain('Edit')
+    expect(container.textContent).not.toContain('View')
+  })
+
   it('prefers the live git branch for the session toolbar pill', () => {
     const project: ProjectRecord = {
       id: 'inferred-project',

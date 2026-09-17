@@ -10,6 +10,7 @@ import { terminalLinkOpensExternally } from '@/lib/terminal-links'
 import type { TerminalPromptContext, TerminalSelectionContext } from '@/types/api'
 import { IconButton } from './ui'
 import { ResizeHandle } from './ResizeHandle'
+import { useI18n } from '@/lib/i18n'
 
 interface TerminalDrawerProps {
   visible?: boolean
@@ -328,6 +329,7 @@ function createTab(number: number, shell?: string, command?: string, label?: str
   }
 }
 export const TerminalDrawer = forwardRef<TerminalDrawerHandle, TerminalDrawerProps>(function TerminalDrawer({ visible = true, cwd, sessionPath, shell, initialCommand, height, minHeight, maxHeight, defaultHeight, onHeightChange, onClose, onError, onInitialCommandConsumed, onOpenLink, onReady, onSelectionChange }, ref) {
+  const { t } = useI18n()
   const firstTabRef = useRef<TerminalTab | undefined>(undefined)
   firstTabRef.current ??= createTab(1, shell, initialCommand?.command, initialCommand?.label, initialCommand?.onExit, initialCommand?.id)
   const nextNumberRef = useRef(2)
@@ -415,10 +417,10 @@ export const TerminalDrawer = forwardRef<TerminalDrawerHandle, TerminalDrawerPro
   }
 
   return (
-    <section className={`terminal-drawer ${maximized ? 'is-maximized' : ''}`} aria-label="Integrated terminal" hidden={!visible}>
-      {!maximized ? <ResizeHandle orientation="horizontal" label="Resize terminal" value={height} min={minHeight} max={maxHeight} defaultValue={defaultHeight} onChange={onHeightChange} /> : null}
+    <section className={`terminal-drawer ${maximized ? 'is-maximized' : ''}`} aria-label={t('terminal.integrated')} hidden={!visible}>
+      {!maximized ? <ResizeHandle orientation="horizontal" label={t('terminal.resize')} value={height} min={minHeight} max={maxHeight} defaultValue={defaultHeight} onChange={onHeightChange} /> : null}
       <div className="terminal-toolbar">
-        <div className="terminal-tabs" role="tablist" aria-label="Terminal tabs">
+        <div className="terminal-tabs" role="tablist" aria-label={t('terminal.tabs')}>
           {tabs.map((tab) => (
             <div className={`terminal-tab ${tab.id === activeTabId ? 'is-active' : ''}`} key={tab.id}>
               <button type="button" role="tab" aria-selected={tab.id === activeTabId} onClick={() => setActiveTabId(tab.id)}>
@@ -427,16 +429,16 @@ export const TerminalDrawer = forwardRef<TerminalDrawerHandle, TerminalDrawerPro
                 <span>{tab.label ?? `${tab.shellName} ${tab.number}`}</span>
                 <span className={`terminal-live-dot ${tab.connected ? 'is-connected' : ''}`}/>
               </button>
-              <button type="button" className="terminal-tab__close" aria-label={`Close tab ${tab.number}`} onClick={() => closeTerminal(tab.id)}><X size={11}/></button>
+              <button type="button" className="terminal-tab__close" aria-label={t('terminal.closeTab', { number: tab.number })} onClick={() => closeTerminal(tab.id)}><X size={11}/></button>
             </div>
           ))}
-          <IconButton label="New terminal" size="small" disabled={tabs.length >= MAX_TERMINAL_TABS} onClick={addTerminal}><Plus size={14}/></IconButton>
+          <IconButton label={t('terminal.new')} size="small" disabled={tabs.length >= MAX_TERMINAL_TABS} onClick={addTerminal}><Plus size={14}/></IconButton>
         </div>
         <div className="terminal-actions">
-          <span className="terminal-cwd" title={cwd}>{cwd?.split('/').at(-1) ?? 'No project'}</span>
-          <IconButton label="Clear terminal" onClick={() => viewRefs.current.get(activeTabId)?.clear()}><Trash2 size={13}/></IconButton>
-          <IconButton label={maximized ? 'Restore terminal' : 'Maximize terminal'} onClick={() => setMaximized((value) => !value)}>{maximized ? <Minimize2 size={13}/> : <Maximize2 size={13}/>}</IconButton>
-          <IconButton label="Close terminal" onClick={onClose}><X size={14}/></IconButton>
+          <span className="terminal-cwd" title={cwd}>{cwd?.split('/').at(-1) ?? t('terminal.noProject')}</span>
+          <IconButton label={t('terminal.clear')} onClick={() => viewRefs.current.get(activeTabId)?.clear()}><Trash2 size={13}/></IconButton>
+          <IconButton label={maximized ? t('terminal.restore') : t('terminal.maximize')} onClick={() => setMaximized((value) => !value)}>{maximized ? <Minimize2 size={13}/> : <Maximize2 size={13}/>}</IconButton>
+          <IconButton label={t('terminal.close')} onClick={onClose}><X size={14}/></IconButton>
         </div>
       </div>
       <div className="terminal-views">

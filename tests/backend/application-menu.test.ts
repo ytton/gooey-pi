@@ -65,6 +65,12 @@ describe('application update menu', () => {
     expect(electron.setApplicationMenu).toHaveBeenCalledWith(electron.buildFromTemplate.mock.results[0]?.value)
   })
 
+  it('hides the native application menu on Windows', () => {
+    installApplicationMenu({ platform: 'win32', appName: 'GooeyPi', checkForUpdates: vi.fn(), closeWindow: vi.fn() })
+    expect(electron.buildFromTemplate).not.toHaveBeenCalled()
+    expect(electron.setApplicationMenu).toHaveBeenCalledWith(null)
+  })
+
   it('routes macOS Command-Q through the main-window close path', () => {
     const closeWindow = vi.fn()
     const template = buildApplicationMenuTemplate({ platform: 'darwin', appName: 'GooeyPi', checkForUpdates: vi.fn(), closeWindow })

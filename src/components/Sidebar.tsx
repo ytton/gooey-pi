@@ -65,9 +65,9 @@ export interface SidebarProps {
   platform?: NodeJS.Platform
 }
 
-const statusLabel: Record<SessionRecord['status'], string> = {
-  idle: 'Idle', running: 'Running', waiting: 'Waiting for input', complete: 'Finished', failed: 'Failed', unknown: 'Unknown',
-}
+const STATUS_LABEL_KEYS = {
+  idle: 'sidebar.status.idle', running: 'sidebar.status.running', waiting: 'sidebar.status.waiting', complete: 'sidebar.status.complete', failed: 'sidebar.status.failed', unknown: 'sidebar.status.unknown',
+} as const satisfies Record<SessionRecord['status'], MessageKey>
 
 export const SIDEBAR_SESSION_LIMIT = 7
 
@@ -111,10 +111,11 @@ export function boundedSidebarSessions(sessions: SessionRecord[]): SessionRecord
 
 
 function SessionStatusMark({ status, attention }: { status: SessionRecord['status']; attention: boolean }) {
-  const title = status === 'failed' && !attention ? 'Failed — notification cleared' : statusLabel[status]
-  if (status === 'running') return <span className="session-status-mark session-status-mark--running" title={statusLabel[status]}><LoaderCircle className="spin" size={13} /></span>
-  if (status === 'waiting') return <span className="session-status-mark session-status-mark--waiting" title={statusLabel[status]}><MessageCircleQuestion size={12} /></span>
-  if (status === 'complete') return <span className="session-status-mark session-status-mark--complete" title={statusLabel[status]}><CheckCircle2 size={12} /></span>
+  const { t } = useI18n()
+  const title = status === 'failed' && !attention ? t('sidebar.status.failedCleared') : t(STATUS_LABEL_KEYS[status])
+  if (status === 'running') return <span className="session-status-mark session-status-mark--running" title={t(STATUS_LABEL_KEYS[status])}><LoaderCircle className="spin" size={13} /></span>
+  if (status === 'waiting') return <span className="session-status-mark session-status-mark--waiting" title={t(STATUS_LABEL_KEYS[status])}><MessageCircleQuestion size={12} /></span>
+  if (status === 'complete') return <span className="session-status-mark session-status-mark--complete" title={t(STATUS_LABEL_KEYS[status])}><CheckCircle2 size={12} /></span>
   return <span className={`session-status-mark session-status-mark--${status}`} title={title}><span /></span>
 }
 
@@ -256,7 +257,7 @@ function SidebarView({ projects, sessions, activeProjectId, activeSessionId, act
   const visibleProjects = useMemo(() => sortProjects(projects.filter((project) => !normalized || project.name.toLowerCase().includes(normalized) || (sessionsByProject.get(project.id) ?? []).some((session) => `${session.title} ${session.preview ?? ''}`.toLowerCase().includes(normalized))), projectSortMode), [projects, sessionsByProject, normalized, projectSortMode])
 
   return (
-    <aside ref={sidebarRef} className="sidebar" aria-label="Project and session navigation" tabIndex={overlay ? -1 : undefined}>
+    <aside ref={sidebarRef} className="sidebar" aria-label={t('sidebar.nav')} tabIndex={overlay ? -1 : undefined}>
       <div className="sidebar__titlebar drag-region">
         <div className="traffic-light-clearance" aria-hidden="true" />
         <div className="sidebar__brand brand-switcher no-drag">
@@ -265,16 +266,16 @@ function SidebarView({ projects, sessions, activeProjectId, activeSessionId, act
             className="brand-switcher__trigger"
             aria-haspopup="menu"
             aria-expanded={harnessMenuOpen}
-            aria-label={`${HARNESS_PRODUCT_NAMES[activeHarness]} — switch harness`}
-            title={`${HARNESS_PRODUCT_NAMES[activeHarness]} — switch harness`}
+            aria-label={t('sidebar.switchHarness', { name: HARNESS_PRODUCT_NAMES[activeHarness] })}
+            title={t('sidebar.switchHarness', { name: HARNESS_PRODUCT_NAMES[activeHarness] })}
             onClick={() => setHarnessMenuOpen((open) => !open)}
           >
             <HarnessMark harness={activeHarness} size={24} />
-            <span className="brand-switcher__name"><strong>{HARNESS_SHORT_NAMES[activeHarness]}</strong><small>Work</small></span>
+            <span className="brand-switcher__name"><strong>{HARNESS_SHORT_NAMES[activeHarness]}</strong><small>{t('common.work')}</small></span>
             <ChevronDown size={12} aria-hidden="true" />
           </button>
           {harnessMenuOpen ? (
-            <div className="brand-switcher__menu" role="menu" aria-label="Harness">
+            <div className="brand-switcher__menu" role="menu" aria-label={t('sidebar.harnessMenu')}>
               {HARNESS_SELECTOR_ORDER.filter((harness) => Boolean(harnesses?.[harness]?.path)).map((harness) => (
                   <button
                     type="button"
@@ -293,19 +294,19 @@ function SidebarView({ projects, sessions, activeProjectId, activeSessionId, act
           ) : null}
         </div>
         <div className="sidebar__title-actions no-drag">
-          <IconButton label={`New session (${newSessionShortcut})`} onClick={() => onNewSession()}><NotebookPen size={16} /></IconButton>
-          <IconButton label={`Hide sidebar (${sidebarShortcut})`} onClick={onClose}><PanelLeftClose size={16} /></IconButton>
+          <IconButton label={t('sidebar.newSessionShortcut', { shortcut: newSessionShortcut })} onClick={() => onNewSession()}><NotebookPen size={16} /></IconButton>
+          <IconButton label={t('sidebar.hide', { shortcut: sidebarShortcut })} onClick={onClose}><PanelLeftClose size={16} /></IconButton>
         </div>
       </div>
 
-      <nav className="sidebar__primary" aria-label="Primary">
-        <button type="button" title={`New session (${newSessionShortcut})`} onClick={() => onNewSession()}><NotebookPen size={15} /><span>New session</span><kbd>{newSessionShortcut}</kbd></button>
-        <button type="button" title="Search" onClick={() => { setSearchOpen((open) => !open); window.setTimeout(() => document.getElementById('session-search')?.focus(), 0) }} className={searchOpen ? 'is-active' : ''}><Search size={15} /><span>Search</span></button>
+      <nav className="sidebar__primary" aria-label={t('sidebar.primary')}>
+        <button type="button" title={t('sidebar.newSessionShortcut', { shortcut: newSessionShortcut })} onClick={() => onNewSession()}><NotebookPen size={15} /><span>{t('sidebar.newSession')}</span><kbd>{newSessionShortcut}</kbd></button>
+        <button type="button" title={t('sidebar.search')} onClick={() => { setSearchOpen((open) => !open); window.setTimeout(() => document.getElementById('session-search')?.focus(), 0) }} className={searchOpen ? 'is-active' : ''}><Search size={15} /><span>{t('sidebar.search')}</span></button>
         {searchOpen ? (
           <div className="sidebar-search">
             <Search size={13} />
-            <input id="session-search" value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Projects, chats, branches" aria-label="Search projects and sessions" />
-            {query ? <button type="button" title="Clear search" aria-label="Clear search" onClick={() => setQuery('')}>×</button> : null}
+            <input id="session-search" value={query} onChange={(event) => setQuery(event.target.value)} placeholder={t('sidebar.searchPlaceholder')} aria-label={t('sidebar.searchAria')} />
+            {query ? <button type="button" title={t('sidebar.clearSearch')} aria-label={t('sidebar.clearSearch')} onClick={() => setQuery('')}>×</button> : null}
           </div>
         ) : null}
         <button type="button" title={t('nav.projects')} className={activeView === 'projects' ? 'is-active' : ''} onClick={() => onNavigate('projects')}><Folder size={15} /><span>{t('nav.projects')}</span></button>
@@ -315,8 +316,8 @@ function SidebarView({ projects, sessions, activeProjectId, activeSessionId, act
       </nav>
 
       <div className="sidebar__scroll scroll-area">
-        <div className="sidebar__section-heading"><span>Projects</span><span className="sidebar__section-heading-actions"><IconButton size="small" className="sidebar__sort-toggle" aria-haspopup="menu" aria-expanded={projectSortMenuOpen} label={t('projects.sort')} onClick={() => setProjectSortMenuOpen((open) => !open)}><ListFilter size={13} /></IconButton><IconButton size="small" label="Add project" onClick={onAddProject}><FolderPlus size={13} /></IconButton>{projectSortMenuOpen ? <div className="sidebar__sort-menu" role="menu" aria-label={t('projects.sort.menu')}>{PROJECT_SORT_MODES.map((mode) => <button key={mode} type="button" role="menuitemradio" aria-checked={projectSortMode === mode} className={projectSortMode === mode ? 'is-active' : ''} onClick={() => { setProjectSortMenuOpen(false); onSetProjectSortMode(mode) }}>{t(PROJECT_SORT_LABEL_KEYS[mode])}{projectSortMode === mode ? <Check size={12} aria-hidden="true" /> : null}</button>)}</div> : null}</span></div>
-        {visibleProjects.length === 0 ? <p className="sidebar__empty">No matching work</p> : null}
+        <div className="sidebar__section-heading"><span>{t('nav.projects')}</span><span className="sidebar__section-heading-actions"><IconButton size="small" className="sidebar__sort-toggle" aria-haspopup="menu" aria-expanded={projectSortMenuOpen} label={t('projects.sort')} onClick={() => setProjectSortMenuOpen((open) => !open)}><ListFilter size={13} /></IconButton><IconButton size="small" label={t('projects.add')} onClick={onAddProject}><FolderPlus size={13} /></IconButton>{projectSortMenuOpen ? <div className="sidebar__sort-menu" role="menu" aria-label={t('projects.sort.menu')}>{PROJECT_SORT_MODES.map((mode) => <button key={mode} type="button" role="menuitemradio" aria-checked={projectSortMode === mode} className={projectSortMode === mode ? 'is-active' : ''} onClick={() => { onSetProjectSortMode(mode); setProjectSortMenuOpen(false) }}>{t(PROJECT_SORT_LABEL_KEYS[mode])}</button>)}</div> : null}</span></div>
+        {visibleProjects.length === 0 ? <p className="sidebar__empty">{t('sidebar.empty')}</p> : null}
         {visibleProjects.map((project) => {
           const projectSessions = (sessionsByProject.get(project.id) ?? []).filter((session) => !normalized || `${session.title} ${session.preview ?? ''}`.toLowerCase().includes(normalized) || project.name.toLowerCase().includes(normalized))
           const isCollapsed = collapsed[project.id] ?? false
@@ -327,7 +328,7 @@ function SidebarView({ projects, sessions, activeProjectId, activeSessionId, act
                 className={`project-row ${activeProjectId === project.id && activeView === 'session' ? 'is-selected' : ''}`}
                 onContextMenu={(event) => { event.preventDefault(); setProjectMenu(project.id) }}
               >
-                <button className="project-row__collapse" type="button" aria-label={`${isCollapsed ? 'Expand' : 'Collapse'} ${project.name}`} title={`${isCollapsed ? 'Expand' : 'Collapse'} ${project.name}`} onClick={() => { setProjectMenu(null); setCollapsed((value) => ({ ...value, [project.id]: !isCollapsed })) }}>
+                <button className="project-row__collapse" type="button" aria-label={t(isCollapsed ? 'sidebar.expand' : 'sidebar.collapse', { name: project.name })} title={t(isCollapsed ? 'sidebar.expand' : 'sidebar.collapse', { name: project.name })} onClick={() => { setProjectMenu(null); setCollapsed((value) => ({ ...value, [project.id]: !isCollapsed })) }}>
                   {isCollapsed ? <ChevronRight size={13} /> : <ChevronDown size={13} />}
                 </button>
                 <button className="project-row__main" type="button" onClick={() => { setProjectMenu(null); onSelectProject(project) }} title={project.path}>
@@ -335,9 +336,9 @@ function SidebarView({ projects, sessions, activeProjectId, activeSessionId, act
                   <span>{project.name}</span>
                   {project.pinned ? <Pin className="project-row__pin" size={11} fill="currentColor" /> : null}
                 </button>
-                <IconButton size="small" className="project-row__new-session row-action" label={`New session in ${project.name}`} onClick={() => { setProjectMenu(null); onNewSession(project) }}><NotebookPen size={13} /></IconButton>
-                {running ? <span className="project-working" title="Agent working"><LoaderCircle className="spin" size={13} /></span> : null}
-                {projectMenu === project.id ? <div className="project-row__menu" role="menu" aria-label={`Project options for ${project.name}`}>{!project.inferred ? <button type="button" role="menuitem" onClick={() => { setProjectMenu(null); onTogglePinProject(project) }}><Pin size={12} /> {t(project.pinned ? 'projects.unpin' : 'projects.pin')}</button> : null}<button type="button" role="menuitem" onClick={() => { setProjectMenu(null); setRemoveTarget(project) }}><Trash2 size={12} /> Remove project</button></div> : null}
+                <IconButton size="small" className="project-row__new-session row-action" label={t('sidebar.newIn', { name: project.name })} onClick={() => { setProjectMenu(null); onNewSession(project) }}><NotebookPen size={13} /></IconButton>
+                {running ? <span className="project-working" title={t('sidebar.working')}><LoaderCircle className="spin" size={13} /></span> : null}
+                {projectMenu === project.id ? <div className="project-row__menu" role="menu" aria-label={t('sidebar.projectOptions', { name: project.name })}>{!project.inferred ? <button type="button" role="menuitem" onClick={() => { setProjectMenu(null); onTogglePinProject(project) }}><Pin size={12} /> {t(project.pinned ? 'projects.unpin' : 'projects.pin')}</button> : null}<button type="button" role="menuitem" onClick={() => { setProjectMenu(null); setRemoveTarget(project) }}><Trash2 size={12} /> {t('sidebar.removeProject')}</button></div> : null}
               </div>
               {!isCollapsed ? (
                 <div className="session-list">
@@ -345,12 +346,12 @@ function SidebarView({ projects, sessions, activeProjectId, activeSessionId, act
                     <div key={session.id} className={`session-row-wrap session-row-wrap--${session.status} ${needsAttention(session) ? 'has-attention' : ''} ${activeSessionId === session.id && activeView === 'session' ? 'is-selected' : ''}`}>
                       <button type="button" title={session.title} className="session-row" onClick={() => { setSessionMenu(null); onSelectSession(session) }} onContextMenu={(event) => { event.preventDefault(); setSessionMenu(session.id) }}>
                         <SessionStatusMark status={session.status} attention={needsAttention(session)} />
-                        <span className="session-row__text"><span className="session-row__title">{session.title}</span><span className="session-row__meta">{session.status === 'running' ? 'Working' : session.status === 'waiting' ? 'Needs attention' : session.status === 'complete' ? 'Finished' : formatRelative(session.updatedAt)}</span></span>
+                        <span className="session-row__text"><span className="session-row__title">{session.title}</span><span className="session-row__meta">{session.status === 'running' ? t('sidebar.meta.working') : session.status === 'waiting' ? t('sidebar.meta.attention') : session.status === 'complete' ? t('sidebar.meta.finished') : formatRelative(session.updatedAt)}</span></span>
                       </button>
                       <IconButton
                         size="small"
                         className={`session-row__archive ${archiveTarget?.id === session.id ? 'is-confirming' : ''}`}
-                        label={archiveTarget?.id === session.id ? `Confirm archive ${session.title}` : `Archive ${session.title}`}
+                        label={archiveTarget?.id === session.id ? t('sidebar.confirmArchive', { title: session.title }) : t('sidebar.archive', { title: session.title })}
                         data-archive-confirming={archiveTarget?.id === session.id}
                         onClick={() => {
                           setSessionMenu(null)
@@ -359,11 +360,11 @@ function SidebarView({ projects, sessions, activeProjectId, activeSessionId, act
                           void onArchiveSession(session)
                         }}
                       >{archiveTarget?.id === session.id ? <Check size={13} /> : <Archive size={13}/>}</IconButton>
-                      <IconButton size="small" className="session-row__more" label={`Session options for ${session.title}`} onClick={() => setSessionMenu((current) => current === session.id ? null : session.id)}><MoreHorizontal size={13}/></IconButton>
-                      {sessionMenu === session.id ? <div className="session-row__menu" aria-label="Session options"><button type="button" onClick={() => { void copySessionUuid(session.id); setSessionMenu(null) }}><Copy size={12}/> Copy session UUID</button><button type="button" onClick={() => { setRenameTarget(session); setRenameValue(session.title); setSessionMenu(null) }}><SquarePen size={12}/> Rename</button></div> : null}
+                      <IconButton size="small" className="session-row__more" label={t('sidebar.sessionOptions', { title: session.title })} onClick={() => setSessionMenu((current) => current === session.id ? null : session.id)}><MoreHorizontal size={13}/></IconButton>
+                      {sessionMenu === session.id ? <div className="session-row__menu" aria-label={t('sidebar.sessionOptions', { title: session.title })}><button type="button" onClick={() => { void copySessionUuid(session.id); setSessionMenu(null) }}><Copy size={12}/> {t('sidebar.copyUuid')}</button><button type="button" onClick={() => { setRenameTarget(session); setRenameValue(session.title); setSessionMenu(null) }}><SquarePen size={12}/> {t('sidebar.rename')}</button></div> : null}
                     </div>
                   ))}
-                  {projectSessions.length === 0 ? <button type="button" title={`New session in ${project.name}`} className="session-row session-row--empty" onClick={() => { setProjectMenu(null); onNewSession(project) }}><NotebookPen size={12} /> New session</button> : null}
+                  {projectSessions.length === 0 ? <button type="button" title={t('sidebar.newIn', { name: project.name })} className="session-row session-row--empty" onClick={() => { setProjectMenu(null); onNewSession(project) }}><NotebookPen size={12} /> {t('sidebar.newSession')}</button> : null}
                 </div>
               ) : null}
             </div>
@@ -372,7 +373,7 @@ function SidebarView({ projects, sessions, activeProjectId, activeSessionId, act
       </div>
 
       <div className="sidebar__footer">
-        <button type="button" title="Commands" onClick={onOpenPalette}><Search size={15} /><span>Commands</span><kbd>{commandsShortcut}</kbd></button>
+        <button type="button" title={t('sidebar.commands')} onClick={onOpenPalette}><Search size={15} /><span>{t('sidebar.commands')}</span><kbd>{commandsShortcut}</kbd></button>
         {updateVisible ? (
           <>
             <span className="sr-only" role="status" aria-live="polite">{updateAnnouncement(updateState)}</span>
@@ -391,9 +392,9 @@ function SidebarView({ projects, sessions, activeProjectId, activeSessionId, act
         ) : null}
         <button type="button" title={t('nav.settings')} className={activeView === 'settings' ? 'is-active' : ''} onClick={() => onNavigate('settings')}><Settings size={15} /><span>{t('nav.settings')}</span><kbd>{settingsShortcut}</kbd></button>
       </div>
-      {renameTarget ? <Modal title="Rename session" onClose={() => setRenameTarget(null)} footer={<><button type="button" className="button" onClick={() => setRenameTarget(null)}>Cancel</button><button type="button" className="button button--primary" disabled={!renameValue.trim()} onClick={() => { const target = renameTarget; const title = renameValue.trim(); setRenameTarget(null); void onRenameSession(target, title) }}>Rename</button></>}><label className="field"><span>Session name</span><input autoFocus value={renameValue} maxLength={200} onChange={(event) => setRenameValue(event.target.value)} onKeyDown={(event) => { if (event.key === 'Enter' && renameValue.trim()) { event.preventDefault(); const target = renameTarget; const title = renameValue.trim(); setRenameTarget(null); void onRenameSession(target, title) } }}/></label></Modal> : null}
-      {removeTarget ? <Modal title="Remove project" onClose={() => setRemoveTarget(null)} footer={<><button type="button" className="button" onClick={() => setRemoveTarget(null)}>Cancel</button><button type="button" className="button button--danger" onClick={() => { const target = removeTarget; setRemoveTarget(null); onRemoveProject(target) }}>Remove</button></>}><p>Remove “{removeTarget.name}” from {HARNESS_PRODUCT_NAMES[activeHarness]}? The folder and saved sessions will not be deleted.</p></Modal> : null}
-      {confirmUpdate ? <Modal title={updateConfirm.title} onClose={() => setConfirmUpdate(false)} footer={<><button type="button" className="button" onClick={() => setConfirmUpdate(false)}>No</button><button type="button" className="button button--primary" onClick={() => { setConfirmUpdate(false); void onUpdateAction?.() }}>Yes</button></>}><p>{updateConfirm.body}</p></Modal> : null}
+      {renameTarget ? <Modal title={t('sidebar.renameTitle')} onClose={() => setRenameTarget(null)} footer={<><button type="button" className="button" onClick={() => setRenameTarget(null)}>{t('common.cancel')}</button><button type="button" className="button button--primary" disabled={!renameValue.trim()} onClick={() => { const target = renameTarget; const title = renameValue.trim(); setRenameTarget(null); void onRenameSession(target, title) }}>{t('sidebar.rename')}</button></>}><label className="field"><span>{t('sidebar.sessionName')}</span><input autoFocus value={renameValue} maxLength={200} onChange={(event) => setRenameValue(event.target.value)} onKeyDown={(event) => { if (event.key === 'Enter' && renameValue.trim()) { event.preventDefault(); const target = renameTarget; const title = renameValue.trim(); setRenameTarget(null); void onRenameSession(target, title) } }} /></label></Modal> : null}
+      {removeTarget ? <Modal title={t('projects.remove.title')} onClose={() => setRemoveTarget(null)} footer={<><button type="button" className="button" onClick={() => setRemoveTarget(null)}>{t('common.cancel')}</button><button type="button" className="button button--danger" onClick={() => { const target = removeTarget; setRemoveTarget(null); onRemoveProject(target) }}>{t('projects.remove.action')}</button></>}><p>{t('projects.remove.body', { name: removeTarget.name, product: HARNESS_PRODUCT_NAMES[activeHarness] })}</p></Modal> : null}
+      {confirmUpdate ? <Modal title={updateConfirm.title} onClose={() => setConfirmUpdate(false)} footer={<><button type="button" className="button" onClick={() => setConfirmUpdate(false)}>{t('common.no')}</button><button type="button" className="button button--primary" onClick={() => { setConfirmUpdate(false); void onUpdateAction?.() }}>{t('common.yes')}</button></>}><p>{updateConfirm.body}</p></Modal> : null}
     </aside>
   )
 }

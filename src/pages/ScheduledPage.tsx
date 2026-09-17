@@ -41,6 +41,7 @@ import { formatRelative } from '@/lib/data'
 import { HARNESS_SHORT_NAMES } from '@/lib/harness'
 import { errorMessage } from '@/lib/errors'
 import { EmptyState, Modal, Segmented } from '@/components/ui'
+import { useI18n } from '@/lib/i18n'
 
 type ScheduleFilter = 'active' | 'paused' | 'attention' | 'all'
 type Frequency = 'hourly' | 'daily' | 'weekly' | 'monthly' | 'advanced'

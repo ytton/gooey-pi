@@ -95,7 +95,7 @@ export function SettingsPage({ settings, meta, providerCatalog, voice, pets, onC
   return (
     <div className="settings-page">
       <nav className="settings-nav" aria-label={t('settings.sections')}>
-        <button type="button" className="settings-nav__close" onClick={onClose}><ArrowLeft size={14} /><span>Back to session</span></button>
+        <button type="button" className="settings-nav__close" onClick={onClose}><ArrowLeft size={14} /><span>{t('settings.back')}</span></button>
         {sections.map((item) => {
           const Icon = item.icon
           return (
@@ -108,16 +108,16 @@ export function SettingsPage({ settings, meta, providerCatalog, voice, pets, onC
       <div className="settings-content scroll-area"><div className="settings-content__inner">{content}</div></div>
       {confirmReset ? (
         <Modal
-          title="Clear browser data?"
+          title={t('browser.reset.title')}
           onClose={() => { if (!resetting) setConfirmReset(false) }}
           footer={(
             <>
-              <button type="button" className="button" disabled={resetting} onClick={() => setConfirmReset(false)}>Cancel</button>
-              <button type="button" className="button button--danger" disabled={resetting} onClick={() => { void resetBrowser() }}>{resetting ? 'Clearing…' : 'Clear browsing data'}</button>
+              <button type="button" className="button" disabled={resetting} onClick={() => setConfirmReset(false)}>{t('common.cancel')}</button>
+              <button type="button" className="button button--danger" disabled={resetting} onClick={() => { void resetBrowser() }}>{resetting ? t('browser.resetting') : t('browser.clear')}</button>
             </>
           )}
         >
-          <p>This signs you out of websites opened in GooeyPi and removes history, cache, cookies, and saved permissions. This cannot be undone.</p>
+          <p>{t('browser.reset.body')}</p>
           {resetError ? <p className="settings-error" role="alert">{resetError}</p> : null}
         </Modal>
       ) : null}
